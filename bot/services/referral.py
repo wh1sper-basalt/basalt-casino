@@ -37,23 +37,23 @@ def validate_referral_link(link: str) -> Optional[int]:
         payload = base64.urlsafe_b64decode(padded).decode()
     except Exception:
         return None
-    
+
     parts = payload.split(":")
     if len(parts) != 3:
         return None
-    
+
     try:
         referrer_id = int(parts[0])
     except ValueError:
         return None
-    
+
     salt, sig = parts[1], parts[2]
     raw = f"{referrer_id}:{salt}"
     expected = hashlib.md5(raw.encode()).hexdigest()[:6]
-    
+
     if len(sig) != len(expected) or sig != expected:
         return None
-    
+
     return referrer_id
 
 
