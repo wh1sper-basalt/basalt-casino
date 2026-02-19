@@ -32,29 +32,36 @@ def validate_referral_link(link: str) -> Optional[int]:
     Returns None if invalid or tampered.
     """
     try:
-        # Decode base64
-        padded = link + "=" * (4 - len(link) % 4) if len(link) % 4 else link
-        payload = base64.urlsafe_b64decode(padded).decode()
+        # Fix padding
+        link = link.strip()
+        padding = 4 - (len(link) % 4)
+        if padding != 4:
+            link += "=" * padding
+
+        # Decode
+        payload = base64.urlsafe_b64decode(link).decode()
+
+        # Split
+        parts = payload.split(":")
+        if len(parts) != 3:
+            return None
+
+        referrer_id = int(parts[0])
+        salt = parts[1]
+        sig = parts[2]
+
+        # Verify signature
+        raw = f"{referrer_id}:{salt}"
+        expected = hashlib.md5(raw.encode()).hexdigest()[:6]
+
+        # CRITICAL FIX: Use direct string comparison, not byte comparison
+        if sig != expected:
+            return None
+
+        return referrer_id
+
     except Exception:
         return None
-
-    parts = payload.split(":")
-    if len(parts) != 3:
-        return None
-
-    try:
-        referrer_id = int(parts[0])
-    except ValueError:
-        return None
-
-    salt, sig = parts[1], parts[2]
-    raw = f"{referrer_id}:{salt}"
-    expected = hashlib.md5(raw.encode()).hexdigest()[:6]
-
-    if len(sig) != len(expected) or sig != expected:
-        return None
-
-    return referrer_id
 
 
 async def process_referral_bonuses(user_id: int, referrer_id: int) -> bool:
