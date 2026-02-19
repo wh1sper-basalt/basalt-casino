@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import base64
+import binascii
 import hashlib
 import secrets
-import binascii
 from typing import Optional
 
 from bot.database.queries import referrals as referrals_queries

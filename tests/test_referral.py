@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from bot.services.referral import (
-    generate_referral_link,
-    process_referral_bonuses,
-    validate_referral_link,
-)
+from bot.services.referral import generate_referral_link, process_referral_bonuses, validate_referral_link
 
 
 def test_generate_and_validate_roundtrip() -> None:
