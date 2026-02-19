@@ -1,10 +1,10 @@
 """Referral: signed link generation/validation, bonus processing."""
-
 from __future__ import annotations
 
 import base64
 import hashlib
 import secrets
+import binascii
 from typing import Optional
 
 from bot.database.queries import referrals as referrals_queries
@@ -32,34 +32,37 @@ def validate_referral_link(link: str) -> Optional[int]:
     Returns None if invalid or tampered.
     """
     try:
-        # Fix padding
+        # Fix padding correctly
         link = link.strip()
-        padding = 4 - (len(link) % 4)
-        if padding != 4:
-            link += "=" * padding
-
+        missing_padding = len(link) % 4
+        if missing_padding:
+            link += '=' * (4 - missing_padding)
+        
         # Decode
-        payload = base64.urlsafe_b64decode(link).decode()
-
+        decoded = base64.urlsafe_b64decode(link)
+        payload = decoded.decode('utf-8')
+        
         # Split
         parts = payload.split(":")
         if len(parts) != 3:
             return None
-
+        
         referrer_id = int(parts[0])
         salt = parts[1]
         sig = parts[2]
-
+        
         # Verify signature
         raw = f"{referrer_id}:{salt}"
         expected = hashlib.md5(raw.encode()).hexdigest()[:6]
-
-        # CRITICAL FIX: Use direct string comparison, not byte comparison
+        
+        # CRITICAL: String comparison must be exact
         if sig != expected:
             return None
-
+            
         return referrer_id
-
+        
+    except (binascii.Error, UnicodeDecodeError, ValueError, TypeError):
+        return None
     except Exception:
         return None
 
