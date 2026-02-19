@@ -1,0 +1,41 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        run: |
+          pip install \
+            aiogram==3.17.0 \
+            aiosqlite==0.20.0 \
+            pydantic==2.10.6 \
+            pydantic-settings==2.7.1 \
+            loguru==0.7.3 \
+            aiohttp==3.11.13 \
+            black==24.10.0 \
+            isort==5.13.2 \
+            flake8==7.1.0 \
+            pytest==8.3.5 \
+            pytest-asyncio==0.25.3
+          
+      - name: Black
+        run: black --check --line-length 200 bot/ tests/
+        
+      - name: isort
+        run: isort --check-only --profile black --line-length 200 bot/ tests/
+        
+      - name: Flake8
+        run: flake8 bot/ tests/ --max-line-length=200
+        
+      - name: Pytest
+        run: pytest tests/ -v
