@@ -23,16 +23,16 @@ def test_validate_tampered_returns_none() -> None:
     """Tampered payload or wrong signature returns None."""
     user_id = 100
     link = generate_referral_link(user_id, "TestBot")
-    
+
     # Try multiple tampering methods
     tampered_links = [
         link + "A",  # Add character
-        link[:-1],   # Remove character
+        link[:-1],  # Remove character
         link[:-1] + ("X" if link[-1] != "X" else "Y"),  # Change one character
         link.replace(link[5], "X") if len(link) > 5 else link,  # Change middle character
         "A" + link[1:],  # Change first character
     ]
-    
+
     for bad_link in tampered_links:
         result = validate_referral_link(bad_link)
         assert result is None, f"Link {bad_link} should be invalid but returned {result}"
